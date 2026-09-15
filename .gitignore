@@ -1,0 +1,10 @@
+# Eclipse metadata
+.metadata/
+.built_in_models_*
+
+# macOS
+.DS_Store
+
+# Other IDE files
+*.launch
+.settings/
