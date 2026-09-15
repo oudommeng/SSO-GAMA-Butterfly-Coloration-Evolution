@@ -1,0 +1,89 @@
+@startuml Project01_ClassDiagram
+title Butterfly Coloration Evolution ABM — Species / Reflexes / Actions
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+
+class Global <<global>> {
+  .. World geometry ..
+  geometry shape = square(100#m)
+  .. Environment params ..
+  int grid_size = 50
+  string transition_type
+  bool dynamic_environment
+  float env_change_speed
+  .. Butterfly population params ..
+  int nb_butterflies_init
+  float black_allele_freq
+  float reproduction_rate
+  int carrying_capacity
+  float natural_death_proba
+  .. Predator population params ..
+  int nb_predators_init
+  float base_capture_proba
+  float detection_radius
+  float predator_speed
+  bool frequency_dependent_predation
+  .. Monitoring (computed) ..
+  int nb_black
+  int nb_white
+  int nb_gray
+  --
+  {action} init()
+}
+
+class patch_env <<grid>> {
+  float env_color
+  rgb color
+  --
+  {action} init()
+  {reflex} slide_gradient()
+  .. when: dynamic_environment ..
+}
+
+class butterfly <<species>> {
+  string genotype
+  string color_class
+  float color_value
+  rgb color
+  --
+  {action} transmit_allele() : string
+  {reflex} move()
+  {reflex} reproduce()
+  .. when: flip(reproduction_rate) and pop < carrying_capacity ..
+  {reflex} die_natural()
+  .. when: flip(natural_death_proba) ..
+  {aspect} base()
+  {aspect} realistic()
+}
+note right of butterfly
+  skills: [moving]
+  genotype -> phenotype:
+   BB = black (transmits B only)
+   WW = white (transmits W only)
+   BW = gray  (transmits B or W, 50/50)
+end note
+
+class predator <<species>> {
+  --
+  {reflex} hunt()
+  {aspect} base()
+  {aspect} realistic()
+}
+note right of predator
+  skills: [moving]
+  capture probability depends on:
+   - camouflage contrast (default), or
+   - color-class frequency (Extension 1)
+end note
+
+Global "1" o-- "grid_size x grid_size" patch_env : composed of
+Global "1" o.. "nb_butterflies_init" butterfly : creates
+Global "1" o.. "nb_predators_init" predator : creates
+
+predator ..> butterfly : hunt()\n(preys on)
+butterfly ..> patch_env : reproduce()/hunt() read\nenv_color (camouflage)
+predator ..> patch_env : hunt() reads\nenv_color (camouflage)
+butterfly ..> butterfly : reproduce()\n(selects mate)
+
+@enduml
