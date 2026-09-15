@@ -1,48 +1,41 @@
 @startuml Project01_Activity_Butterfly
-title Butterfly agent — per-cycle behavior (skills: [moving])
+title Butterfly — what it does every cycle
 
 start
-:Cycle tick for this butterfly;
+:A butterfly wakes up for this cycle;
 
-' --- reflex move() ---
-:move() — do wander(amplitude: 30°, speed: 0.5);
+:Flutter around randomly;
 
-' --- reflex reproduce() ---
-if (flip(reproduction_rate)\nAND population < carrying_capacity?) then (yes)
-  :find mates = other butterflies\nwithin 5m (excluding self);
-  if (mates found?) then (yes)
-    :pick one random mate;
-    :a1 = self.transmit_allele();
-    :a2 = mate.transmit_allele();
+if (Is it time to try reproducing?) then (yes)
+  :Look for another butterfly nearby;
+  if (Found a partner?) then (yes)
+    :Each parent passes on\none of its colors;
     note right
-      transmit_allele():
-      BB -> always "B"
-      WW -> always "W"
-      BW -> "B" or "W" (50/50)
+      A black butterfly always passes on black.
+      A white butterfly always passes on white.
+      A gray butterfly passes on
+      black or white, at random.
     end note
-    if (a1 = "B" and a2 = "B"?) then (yes)
-      :child genotype = "BB" (black);
-    elseif (a1 = "W" and a2 = "W"?) then (yes)
-      :child genotype = "WW" (white);
-    else (no)
-      :child genotype = "BW" (gray);
-    endif
-    :create new butterfly\nat parent's location;
-    :nb_reproductions += 1;
-  else (no mates nearby)
+    :Combine both colors\nto decide the baby's color;
+    note right
+      Two blacks -> black baby
+      Two whites -> white baby
+      One of each -> gray baby
+    end note
+    :A new baby butterfly is born\nnext to its parent;
+  else (no)
+    :No partner found, skip reproducing;
   endif
 else (no)
 endif
 
-' --- reflex die_natural() ---
-if (flip(natural_death_proba)?) then (yes)
-  :nb_deaths_natural += 1;
-  :die;
+if (Does it die of old age / natural causes\nthis cycle?) then (yes)
+  :The butterfly dies;
   stop
 else (no)
 endif
 
-:end of cycle (still alive);
+:Butterfly survives to the next cycle;
 stop
 
 @enduml

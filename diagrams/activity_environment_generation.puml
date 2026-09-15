@@ -1,39 +1,28 @@
 @startuml Project01_Activity_Environment
-title Environment generation — patch_env grid
+title How the environment is generated
 
 start
-:Model init;
-:world shape = square(100 #m);
-:create grid patch_env\n(width = height = grid_size = 50);
+:Set up a 100m x 100m field;
+:Divide the field into a grid of patches;
 
-partition "patch_env.init() — one-time, per patch" {
-  if (transition_type = "abrupt"?) then (yes)
-    :env_color = (grid_x < grid_size/2) ? 0.0 : 1.0;
-    note right: hard black|white split\nat the middle column
+partition "Coloring the patches (at the start)" {
+  if (Is the transition abrupt?) then (yes)
+    :Split the field in half —\none side pure black,\nthe other side pure white;
   else (gradual)
-    :env_color = grid_x / float(grid_size - 1);
-    note right: smooth 0.0 -> 1.0 ramp\nleft to right (avoids int-division bug)
+    :Blend the colors smoothly\nfrom black on one side\nto white on the other;
   endif
-  :color = rgb(env_color*255, env_color*255, env_color*255);
 }
 
-if (dynamic_environment?\n[Extension 2]) then (yes)
-  partition "patch_env.slide_gradient() — every cycle" {
+if (Should the environment\nchange over time? [Extension 2]) then (yes)
+  partition "While the simulation runs" {
     repeat
-      :shift = (cycle * env_change_speed) mod grid_size;
-      :x_shifted = (grid_x + shift) mod grid_size;
-      if (transition_type = "abrupt"?) then (yes)
-        :env_color = (x_shifted < grid_size/2) ? 0.0 : 1.0;
-      else (gradual)
-        :env_color = x_shifted / (grid_size - 1);
-      endif
-      :gradient boundary/ramp\nslides across the grid;
-    repeat while (simulation running?) is (yes)
+      :Shift the black-to-white pattern\nacross the field a little;
+    repeat while (Simulation still running?) is (yes)
     ->no;
   }
   stop
 else (no)
-  :env_color stays fixed\nfor the whole simulation;
+  :Environment stays the same\nfor the whole simulation;
   stop
 endif
 
