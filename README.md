@@ -9,9 +9,6 @@ environmental gradient, built with the [GAMA Platform](https://gama-platform.org
 
 ## Assignment
 
-> **USTH 2024 – Project 1**
-> **Butterfly color evolution**
->
 > *How do colorations of butterflies emerge from predator-prey interactions and camouflage?*
 >
 > The colorful canvas of butterfly wings are examples of evolutionary innovation and adaptation.
