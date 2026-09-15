@@ -113,6 +113,15 @@ species butterfly skills: [moving] {
 	aspect base {
 		draw circle(1) color: color;
 	}
+
+	aspect realistic {
+		string icon <- "../assets/butterfly_" + color_class + ".png";
+		if file_exists(icon) {
+			draw square(2.0) rotate: heading texture: icon;
+		} else {
+			draw sphere(0.6) color: color;
+		}
+	}
 }
 
 species predator skills: [moving] {
@@ -144,6 +153,15 @@ species predator skills: [moving] {
 	aspect base {
 		draw triangle(1.5) color: #red;
 	}
+
+	aspect realistic {
+		string icon <- "../assets/predator.png";
+		if file_exists(icon) {
+			draw square(3.0) rotate: heading texture: icon;
+		} else {
+			draw cone3D(1.2, 2.0) color: #red;
+		}
+	}
 }
 
 experiment Base_Model type: gui {
@@ -170,6 +188,7 @@ experiment Base_Model type: gui {
 				data "gray" value: nb_gray color: #gray;
 				data "white" value: nb_white color: #black marker: false;
 			}
+	
 		}
 	}
 }
@@ -181,4 +200,16 @@ experiment Extension1_FrequencyDependentPredation parent: Base_Model {
 experiment Extension2_DynamicEnvironment parent: Base_Model {
 	parameter "Dynamic environment" var: dynamic_environment init: true;
 	parameter "Environment change speed" var: env_change_speed init: 0.1;
+}
+
+experiment View_3D parent: Base_Model {
+	output {
+		display Environment_3D type: 3d {
+//			image "../assets/background.jpg" size: {100, 100, 0} position: {0, 0, 0};
+			species patch_env transparency: 0.6;
+			species butterfly aspect: realistic;
+			species predator aspect: realistic;
+			camera "default" location: {50, -30, 90} target: {50, 50, 0};
+		}
+	}
 }
