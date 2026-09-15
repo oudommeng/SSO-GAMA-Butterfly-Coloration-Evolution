@@ -24,12 +24,23 @@ class Global <<global>> {
   float detection_radius
   float predator_speed
   bool frequency_dependent_predation
-  .. Monitoring (computed) ..
+  .. Monitoring: population / genotype (computed) ..
   int nb_black
   int nb_white
   int nb_gray
+  int nb_BB
+  int nb_WW
+  int nb_BW
+  int nb_allele_B
+  int nb_allele_W
+  .. Monitoring: event counters (reset each cycle) ..
+  int nb_reproductions
+  int nb_deaths_predation
+  int nb_deaths_natural
+  int nb_deaths_total
   --
   {action} init()
+  {reflex} reset_counters()
 }
 
 class patch_env <<grid>> {

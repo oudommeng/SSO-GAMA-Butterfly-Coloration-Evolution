@@ -1,0 +1,55 @@
+@startuml Project01_ObjectDiagram
+title Example agent instances (one simulated moment)
+
+object "butterfly_101 : butterfly" as b1 {
+  genotype = "BB"
+  color_class = "black"
+  color_value = 0.0
+  color = #000000
+}
+
+object "butterfly_102 : butterfly" as b2 {
+  genotype = "WW"
+  color_class = "white"
+  color_value = 1.0
+  color = #FFFFFF
+}
+
+object "butterfly_103 : butterfly" as b3 {
+  genotype = "BW"
+  color_class = "gray"
+  color_value = 0.5
+  color = #808080
+}
+
+object "predator_7 : predator" as p1
+
+object "patch_env(0,25) : patch_env" as patchA {
+  grid_x = 0
+  env_color = 0.0
+}
+
+object "patch_env(24,25) : patch_env" as patchC {
+  grid_x = 24
+  env_color = 0.49
+}
+
+object "patch_env(49,25) : patch_env" as patchB {
+  grid_x = 49
+  env_color = 1.0
+}
+
+b1 -- patchA : sits on black patch\ncontrast = |0.0-0.0| = 0.0\n(well camouflaged)
+b3 -- patchC : sits on mid-gray patch\ncontrast = |0.49-0.5| = 0.01\n(well camouflaged)
+b2 -- patchB : sits on white patch\ncontrast = |1.0-1.0| = 0.0\n(well camouflaged)
+
+p1 ..> b3 : hunt() targets b3\n(within detection_radius)\ncapture_p = base_capture_proba * 0.01\n(low chance -> likely escapes)
+
+note bottom
+  Snapshot illustrates why camouflage matters:
+  b1 and b2 sit on matching-color patches (contrast 0) and
+  b3 sits on a near-matching patch under a gradual gradient —
+  all three currently have low capture probability.
+end note
+
+@enduml

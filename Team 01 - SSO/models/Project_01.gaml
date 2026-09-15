@@ -9,6 +9,8 @@
 * between butterfly color and local patch color (camouflage).
 * Extension 1: predators preferentially target the most common color class.
 * Extension 2: environment gradient slides across the grid at a configurable speed.
+* Extension 3: predation intensity is varied (high vs. low base capture probability)
+*   to study its effect on morph selection and persistence.
 * Authors: Oudom Meng, Sunchhay Khoun, Solita Pun
 * Tags: agent-based model, evolution, predation, camouflage, genetics
 */
@@ -22,7 +24,7 @@ global {
 	// --- Grid / environment ---
 	int grid_size <- 50;
 	string transition_type <- "gradual" among: ["gradual", "abrupt"];
-	bool dynamic_environment <- false;
+	bool dynamic_environment <- true;
 	float env_change_speed <- 0.0; // patches shifted per cycle (extension 2)
 
 	// --- Butterfly population ---
@@ -35,14 +37,31 @@ global {
 	// --- Predator population ---
 	int nb_predators_init <- 10;
 	float base_capture_proba <- 0.6; // capture probability at maximum contrast / max frequency
-	float detection_radius <- 3.0;
-	float predator_speed <- 1.5;
+	float detection_radius <- 2.0;
+	float predator_speed <- 0.5;
 	bool frequency_dependent_predation <- false; // extension 1
 
-	// --- Monitoring ---
+	// --- Monitoring: population / genotype counts (recomputed every cycle) ---
 	int nb_black -> length(butterfly where (each.color_class = "black"));
 	int nb_white -> length(butterfly where (each.color_class = "white"));
 	int nb_gray -> length(butterfly where (each.color_class = "gray"));
+	int nb_BB -> length(butterfly where (each.genotype = "BB"));
+	int nb_WW -> length(butterfly where (each.genotype = "WW"));
+	int nb_BW -> length(butterfly where (each.genotype = "BW"));
+	int nb_allele_B -> 2 * nb_BB + nb_BW; // total B alleles in the population
+	int nb_allele_W -> 2 * nb_WW + nb_BW; // total W alleles in the population
+
+	// --- Monitoring: event counters, reset every cycle by reset_counters ---
+	int nb_reproductions <- 0;
+	int nb_deaths_predation <- 0;
+	int nb_deaths_natural <- 0;
+	int nb_deaths_total -> nb_deaths_predation + nb_deaths_natural;
+
+	reflex reset_counters {
+		nb_reproductions <- 0;
+		nb_deaths_predation <- 0;
+		nb_deaths_natural <- 0;
+	}
 
 	init {
 		create butterfly number: nb_butterflies_init {
@@ -103,10 +122,12 @@ species butterfly skills: [moving] {
 				genotype <- child_genotype;
 				location <- myself.location;
 			}
+			nb_reproductions <- nb_reproductions + 1;
 		}
 	}
 
 	reflex die_natural when: flip(natural_death_proba) {
+		nb_deaths_natural <- nb_deaths_natural + 1;
 		do die;
 	}
 
@@ -139,6 +160,7 @@ species predator skills: [moving] {
 				capture_p <- base_capture_proba * contrast;
 			}
 			if flip(capture_p) {
+				nb_deaths_predation <- nb_deaths_predation + 1;
 				ask prey {
 					do die;
 				}
@@ -176,6 +198,17 @@ experiment Base_Model type: gui {
 	parameter "Predator detection radius" var: detection_radius;
 
 	output {
+		monitor "Butterflies alive" value: length(butterfly);
+		monitor "Reproductions (this cycle)" value: nb_reproductions;
+		monitor "Deaths - predation (this cycle)" value: nb_deaths_predation;
+		monitor "Deaths - natural (this cycle)" value: nb_deaths_natural;
+		monitor "Deaths - total (this cycle)" value: nb_deaths_total;
+		monitor "Genotype BB (black)" value: nb_BB;
+		monitor "Genotype WW (white)" value: nb_WW;
+		monitor "Genotype BW (gray)" value: nb_BW;
+		monitor "Allele B count" value: nb_allele_B;
+		monitor "Allele W count" value: nb_allele_W;
+
 		display Environment type: 2d {
 			image "../assets/background.jpg";
 			grid patch_env border: #black transparency: 0.3;
@@ -188,7 +221,13 @@ experiment Base_Model type: gui {
 				data "gray" value: nb_gray color: #gray;
 				data "white" value: nb_white color: #black marker: false;
 			}
-	
+		}
+		display Events_Chart {
+			chart "Reproductions vs deaths per cycle" type: series {
+				data "reproductions" value: nb_reproductions color: #green;
+				data "deaths (predation)" value: nb_deaths_predation color: #red;
+				data "deaths (natural)" value: nb_deaths_natural color: #gray;
+			}
 		}
 	}
 }
@@ -200,6 +239,14 @@ experiment Extension1_FrequencyDependentPredation parent: Base_Model {
 experiment Extension2_DynamicEnvironment parent: Base_Model {
 	parameter "Dynamic environment" var: dynamic_environment init: true;
 	parameter "Environment change speed" var: env_change_speed init: 0.1;
+}
+
+experiment Extension3_HighPredation parent: Base_Model {
+	parameter "Base capture probability" var: base_capture_proba init: 0.9;
+}
+
+experiment Extension3_LowPredation parent: Base_Model {
+	parameter "Base capture probability" var: base_capture_proba init: 0.15;
 }
 
 experiment View_3D parent: Base_Model {

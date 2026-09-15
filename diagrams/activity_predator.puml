@@ -1,0 +1,35 @@
+@startuml Project01_Activity_Predator
+title Predator agent — hunt() reflex (skills: [moving])
+
+start
+:Cycle tick for this predator;
+:scan for butterflies\nwithin detection_radius;
+
+if (any butterfly detected?) then (yes)
+  :pick one random prey;
+
+  if (frequency_dependent_predation?\n[Extension 1]) then (yes)
+    :freq = share of prey's color_class\nin the whole population;
+    :capture_p = base_capture_proba * freq;
+    note right: most common morph\nis hunted more
+  else (no — default camouflage rule)
+    :here_patch = patch_env at prey's location;
+    :contrast = |here_patch.env_color - prey.color_value|;
+    :capture_p = base_capture_proba * contrast;
+    note right: better camouflage match\n(low contrast) -> harder to catch
+  endif
+
+  if (flip(capture_p)?) then (yes — captured)
+    :nb_deaths_predation += 1;
+    :prey dies;
+  else (no — escapes)
+    :goto(target: prey.location,\nspeed: predator_speed);
+  endif
+
+else (no prey in range)
+  :wander(amplitude: 30°, speed: predator_speed);
+endif
+
+stop
+
+@enduml

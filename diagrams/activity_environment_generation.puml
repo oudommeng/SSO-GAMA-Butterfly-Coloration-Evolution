@@ -1,0 +1,40 @@
+@startuml Project01_Activity_Environment
+title Environment generation — patch_env grid
+
+start
+:Model init;
+:world shape = square(100 #m);
+:create grid patch_env\n(width = height = grid_size = 50);
+
+partition "patch_env.init() — one-time, per patch" {
+  if (transition_type = "abrupt"?) then (yes)
+    :env_color = (grid_x < grid_size/2) ? 0.0 : 1.0;
+    note right: hard black|white split\nat the middle column
+  else (gradual)
+    :env_color = grid_x / float(grid_size - 1);
+    note right: smooth 0.0 -> 1.0 ramp\nleft to right (avoids int-division bug)
+  endif
+  :color = rgb(env_color*255, env_color*255, env_color*255);
+}
+
+if (dynamic_environment?\n[Extension 2]) then (yes)
+  partition "patch_env.slide_gradient() — every cycle" {
+    repeat
+      :shift = (cycle * env_change_speed) mod grid_size;
+      :x_shifted = (grid_x + shift) mod grid_size;
+      if (transition_type = "abrupt"?) then (yes)
+        :env_color = (x_shifted < grid_size/2) ? 0.0 : 1.0;
+      else (gradual)
+        :env_color = x_shifted / (grid_size - 1);
+      endif
+      :gradient boundary/ramp\nslides across the grid;
+    repeat while (simulation running?) is (yes)
+    ->no;
+  }
+  stop
+else (no)
+  :env_color stays fixed\nfor the whole simulation;
+  stop
+endif
+
+@enduml

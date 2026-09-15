@@ -7,6 +7,51 @@ Agent-based model (ABM) exploring how butterfly wing coloration emerges from
 predator-prey interactions and camouflage against a black-to-white
 environmental gradient, built with the [GAMA Platform](https://gama-platform.org/).
 
+## Assignment
+
+> **USTH 2024 – Project 1**
+> **Butterfly color evolution**
+>
+> *How do colorations of butterflies emerge from predator-prey interactions and camouflage?*
+>
+> The colorful canvas of butterfly wings are examples of evolutionary innovation and adaptation.
+> Starting in the 19th century, naturalists investigated the function of wing-color patterns in
+> different butterfly species. The understanding of population genetics in the early 20th century
+> led to associations between specific genes and color patterns, helping elucidate how and when
+> they evolved. Recently, researchers have discovered that just a few genes are responsible for
+> setting up the patterning throughout the wing.
+>
+> The environmental conditions (dominant color in the surroundings) and predator avoidance
+> through camouflage are key selective drivers of colorations. Observations of black and white
+> colorations of closely related butterflies living in different habitats are examples of local
+> adaptations and natural selection. For instance, peppered moths are displaying three morphs:
+> a white morph, a black morph, and different intermediate shades of gray.
+>
+> A research question is to evaluate how predatory selection in a gradient of environmental
+> conditions (black to white) can allow the emergence of distinct populations with different
+> colors.
+>
+> Create an agent-based model describing the butterfly population, its reproduction at a fixed
+> rate, with coloration dependent on a simple transmission system (each parent transmits black
+> or white depending on its color: white butterflies only transmit white, black only black and
+> gray ones have 50% chance to transmit either color), predation pressure (modeling a predator
+> population that feeds on butterflies but can be tricked by their camouflage) and an abrupt or
+> gradual transition in local environmental colors to explore under which conditions distinct
+> morphs can emerge.
+>
+> **Extension 1**: Modify the model by considering that predators prefer to hunt the most
+> represented color of the moth population.
+>
+> **Extension 2**: Modify the model to include dynamic environmental transitions, where the
+> colors of the environmental patches can change at a given speed. Investigate how the
+> variability in this change rate influences the emergence and stability of distinct morphs in
+> butterfly populations.
+>
+> **Extension 3**: Explore the impact of varying predation intensity within the model. Adjust
+> the predation pressure on butterfly populations, introducing scenarios with high and low
+> predation rates. Examine how predation intensity influences the selection and persistence of
+> different color morphs.
+
 ## Research question
 
 How can predatory selection, acting across a gradient of environmental
@@ -42,6 +87,10 @@ selective advantage.
   configurable rate. The model is used to study how the speed of
   environmental change affects whether distinct morphs emerge and how
   stable they remain.
+- **Extension 3 — predation intensity**: the base capture probability is
+  varied between high- and low-predation scenarios to examine how the
+  strength of predation pressure affects which morph(s) are selected and
+  whether they persist over time.
 
 ## Repository structure
 
@@ -77,8 +126,12 @@ GAMA_Project/
    - Double-click `Project_01.gaml` to open it in the editor.
    - Click the green **Run** (▶) button, or right-click the model and
      choose **Run**.
-   - Select the experiment to launch (e.g. the main simulation experiment)
-     from the launch dialog.
+   - Pick an experiment from the launch dialog:
+     - `Base_Model` — base predator/camouflage/gradient model
+     - `Extension1_FrequencyDependentPredation` — predators target the most common morph
+     - `Extension2_DynamicEnvironment` — environment gradient slides over time
+     - `Extension3_HighPredation` / `Extension3_LowPredation` — high vs. low predation pressure
+     - `View_3D` — 3D display with textured butterfly/predator icons
 
 4. **Explore parameters**
    - Use the experiment's parameters panel to adjust reproduction rate,
