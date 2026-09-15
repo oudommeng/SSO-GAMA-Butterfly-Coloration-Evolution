@@ -1,4 +1,7 @@
-# Butterfly Coloration Evolution — GAMA Agent-Based Model
+# Butterfly Coloration Evolution
+## GAMA Agent-Based Model
+
+![Simulation Preview](Team%2001%20-%20SSO/assets/preview.gif)
 
 Agent-based model (ABM) exploring how butterfly wing coloration emerges from
 predator-prey interactions and camouflage against a black-to-white
