@@ -1,0 +1,18 @@
+@startuml Project01_State_Hunting
+title Predator — hunting states
+
+[*] --> Searching
+
+Searching --> Searching : nothing spotted,\nkeep wandering
+Searching --> Chasing : a butterfly is spotted
+
+Chasing --> Feeding : the butterfly\nis caught
+Chasing --> Searching : the butterfly\ngets away
+
+Feeding --> Searching : done, look\nfor the next one
+
+Searching : wandering around,\nlooking for prey
+Chasing : targeting one butterfly,\njudging how well it's camouflaged
+Feeding : prey caught,\nremoved from the population
+
+@enduml

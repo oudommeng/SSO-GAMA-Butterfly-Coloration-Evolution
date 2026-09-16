@@ -1,100 +1,56 @@
 @startuml Project01_ClassDiagram
-title Butterfly Coloration Evolution ABM — Species / Reflexes / Actions
+title Butterfly Coloration Evolution ABM — High-level overview
 
 skinparam classAttributeIconSize 0
 skinparam classFontStyle bold
 
 class Global <<global>> {
-  .. World geometry ..
-  geometry shape = square(100#m)
-  .. Environment params ..
-  int grid_size = 50
-  string transition_type
-  bool dynamic_environment
-  float env_change_speed
-  .. Butterfly population params ..
-  int nb_butterflies_init
-  float black_allele_freq
-  float reproduction_rate
-  int carrying_capacity
-  float natural_death_proba
-  .. Predator population params ..
-  int nb_predators_init
-  float base_capture_proba
-  float detection_radius
-  float predator_speed
-  bool frequency_dependent_predation
-  .. Monitoring: population / genotype (computed) ..
-  int nb_black
-  int nb_white
-  int nb_gray
-  int nb_BB
-  int nb_WW
-  int nb_BW
-  int nb_allele_B
-  int nb_allele_W
-  .. Monitoring: event counters (reset each cycle) ..
-  int nb_reproductions
-  int nb_deaths_predation
-  int nb_deaths_natural
-  int nb_deaths_total
+  reproduction rate
+  predation strength
+  environment gradient settings
   --
   {action} init()
-  {reflex} reset_counters()
 }
 
 class patch_env <<grid>> {
-  float env_color
-  rgb color
+  background color
   --
-  {action} init()
   {reflex} slide_gradient()
-  .. when: dynamic_environment ..
 }
+note right of patch_env
+  Extension 2: background color
+  can drift over time
+end note
 
 class butterfly <<species>> {
-  string genotype
-  string color_class
-  float color_value
-  rgb color
+  color (black / white / gray)
   --
-  {action} transmit_allele() : string
   {reflex} move()
   {reflex} reproduce()
-  .. when: flip(reproduction_rate) and pop < carrying_capacity ..
   {reflex} die_natural()
-  .. when: flip(natural_death_proba) ..
-  {aspect} base()
-  {aspect} realistic()
 }
 note right of butterfly
-  skills: [moving]
-  genotype -> phenotype:
-   BB = black (transmits B only)
-   WW = white (transmits W only)
-   BW = gray  (transmits B or W, 50/50)
+  Color is inherited from two parents:
+  black + black -> black
+  white + white -> white
+  mixed -> gray
 end note
 
 class predator <<species>> {
   --
   {reflex} hunt()
-  {aspect} base()
-  {aspect} realistic()
 }
 note right of predator
-  skills: [moving]
-  capture probability depends on:
-   - camouflage contrast (default), or
-   - color-class frequency (Extension 1)
+  Hunts by camouflage,
+  or by color popularity (Extension 1)
 end note
 
-Global "1" o-- "grid_size x grid_size" patch_env : composed of
-Global "1" o.. "nb_butterflies_init" butterfly : creates
-Global "1" o.. "nb_predators_init" predator : creates
+Global "1" *-- "many" patch_env : environment
+Global "1" o.. "many" butterfly : population
+Global "1" o.. "many" predator : population
 
-predator ..> butterfly : hunt()\n(preys on)
-butterfly ..> patch_env : reproduce()/hunt() read\nenv_color (camouflage)
-predator ..> patch_env : hunt() reads\nenv_color (camouflage)
-butterfly ..> butterfly : reproduce()\n(selects mate)
+predator ..> butterfly : hunts
+butterfly ..> patch_env : blends into
+predator ..> patch_env : judges camouflage against
 
 @enduml
