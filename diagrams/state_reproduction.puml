@@ -1,0 +1,20 @@
+@startuml Project01_State_Reproduction
+title Butterfly — reproduction states
+
+[*] --> Wandering
+
+Wandering --> LookingForPartner : ready to reproduce
+LookingForPartner --> Wandering : no partner nearby
+LookingForPartner --> PartnerFound : partner nearby
+
+PartnerFound --> MixingColors : both parents\npass on a color
+MixingColors --> BabyBorn : colors combined\ninto a new color
+BabyBorn --> Wandering : back to normal life
+
+Wandering : flying around,\nnot reproducing right now
+LookingForPartner : trying to find\nanother butterfly nearby
+PartnerFound : a partner\nhas been found
+MixingColors : each parent gives\none of its colors
+BabyBorn : a new butterfly\nis created nearby
+
+@enduml
