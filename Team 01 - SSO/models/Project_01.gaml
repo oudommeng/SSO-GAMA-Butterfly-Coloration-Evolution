@@ -187,6 +187,15 @@ species predator skills: [moving] {
 }
 
 experiment Base_Model type: gui {
+	reflex export_csv {
+		save [cycle, length(butterfly), nb_reproductions, nb_deaths_predation, nb_deaths_natural, nb_deaths_total,
+			nb_black, nb_white, nb_gray, nb_BB, nb_WW, nb_BW, nb_allele_B, nb_allele_W]
+			to: "../Analysis/Base_Model_results.csv"
+			format: "csv"
+			rewrite: (cycle = 0)
+			header: true;
+	}
+
 	parameter "Grid size" var: grid_size;
 	parameter "Environment transition" var: transition_type;
 	parameter "Initial butterflies" var: nb_butterflies_init;
