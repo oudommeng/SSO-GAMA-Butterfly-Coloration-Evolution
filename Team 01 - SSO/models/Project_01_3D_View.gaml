@@ -99,7 +99,7 @@ species butterfly skills: [moving3D] {
 	float color_value update: (genotype = "BB") ? 0.0 : ((genotype = "WW") ? 1.0 : 0.5);
 	rgb color update: (color_class = "black") ? #black : ((color_class = "white") ? #white : rgb(128, 128, 128));
 
-	string transmit_allele {
+	string transmit_allele() {
 		if (genotype = "BB") {
 			return "B";
 		} else if (genotype = "WW") {

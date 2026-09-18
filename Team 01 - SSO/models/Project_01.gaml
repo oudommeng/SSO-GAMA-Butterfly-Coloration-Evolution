@@ -93,15 +93,17 @@ global {
 
 grid patch_env width: grid_size height: grid_size neighbors: 8 {
 	float env_color <- 0.0; // 0 = black background, 1 = white background
-	rgb color update: rgb(env_color * 255, env_color * 255, env_color * 255);
+	rgb color update: rgb(int(env_color * 255), int(env_color * 255), int(env_color * 255));
 
 	init {
 		env_color <- (transition_type = "abrupt") ? (grid_x < grid_size / 2 ? 0.0 : 1.0) : (grid_x / float(grid_size - 1));
 	}
 
 	reflex slide_gradient when: dynamic_environment {
-		float shift <- (cycle * env_change_speed) mod grid_size;
-		float x_shifted <- (grid_x + shift) mod grid_size;
+		float raw_shift <- cycle * env_change_speed;
+		float shift <- raw_shift - grid_size * floor(raw_shift / grid_size);
+		float raw_x <- grid_x + shift;
+		float x_shifted <- raw_x - grid_size * floor(raw_x / grid_size);
 		env_color <- (transition_type = "abrupt") ? (x_shifted < grid_size / 2 ? 0.0 : 1.0) : (x_shifted / (grid_size - 1));
 	}
 }
@@ -112,7 +114,7 @@ species butterfly skills: [moving] {
 	float color_value update: (genotype = "BB") ? 0.0 : ((genotype = "WW") ? 1.0 : 0.5);
 	rgb color update: (color_class = "black") ? #black : ((color_class = "white") ? #white : rgb(128, 128, 128));
 
-	string transmit_allele {
+	string transmit_allele() {
 		if (genotype = "BB") {
 			return "B";
 		} else if (genotype = "WW") {
@@ -123,7 +125,7 @@ species butterfly skills: [moving] {
 	}
 
 	reflex move {
-		do wander amplitude: 30.0 speed: 0.5;
+		do wander(amplitude: 30.0, speed: 0.5);
 	}
 
 	reflex reproduce when: flip(reproduction_rate) and (length(butterfly) < carrying_capacity) {
@@ -145,7 +147,7 @@ species butterfly skills: [moving] {
 	reflex die_natural when: flip(natural_death_proba) {
 		nb_deaths_natural <- nb_deaths_natural + 1;
 		total_deaths_natural <- total_deaths_natural + 1;
-		do die;
+		do die();
 	}
 
 	aspect base {
@@ -191,13 +193,13 @@ species predator skills: [moving] {
 				}
 				location <- prey.location;
 				ask prey {
-					do die;
+					do die();
 				}
 			} else {
-				do goto target: prey.location speed: predator_speed;
+				do goto(target: prey.location, speed: predator_speed);
 			}
 		} else {
-			do wander amplitude: 30.0 speed: predator_speed;
+			do wander(amplitude: 30.0, speed: predator_speed);
 		}
 	}
 
