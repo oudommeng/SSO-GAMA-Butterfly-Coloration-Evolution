@@ -326,6 +326,8 @@ experiment Extension2_DynamicEnvironment parent: Base_Model {
 	}
 }
 
+
+
 experiment Extension3_HighPredation parent: Base_Model {
 	parameter "Base capture probability" var: base_capture_proba init: 0.9;
 
@@ -356,6 +358,22 @@ experiment Extension3_LowPredation parent: Base_Model {
 			rewrite: (cycle = 0)
 			header: true;
 	}
+}
+
+experiment Test_Micro_Population_Drift parent: Base_Model {
+	parameter "Carrying capacity" var: carrying_capacity init: 25;
+	parameter "Initial butterflies" var: nb_butterflies_init init: 20;
+	parameter "Base capture probability" var: base_capture_proba init: 0.25;
+}
+
+
+experiment Test_Extinction_Threshold parent: Base_Model {
+	parameter "Base capture probability" var: base_capture_proba init: 1.0;
+	parameter "Initial predators" var: nb_predators_init init: 150;
+	parameter "Predator detection radius" var: detection_radius init: 15.0;
+	parameter "Reproduction rate" var: reproduction_rate init: 0.02;
+	parameter "Dynamic environment" var: dynamic_environment init: true;
+	parameter "Environment change speed" var: env_change_speed init: 0.2;
 }
 
 experiment View_3D parent: Base_Model {
