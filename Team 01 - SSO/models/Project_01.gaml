@@ -51,16 +51,31 @@ global {
 	int nb_allele_B -> 2 * nb_BB + nb_BW; // total B alleles in the population
 	int nb_allele_W -> 2 * nb_WW + nb_BW; // total W alleles in the population
 
-	// --- Monitoring: event counters, reset every cycle by reset_counters ---
+	// --- Monitoring: per-cycle event counters, reset every cycle by reset_counters ---
 	int nb_reproductions <- 0;
 	int nb_deaths_predation <- 0;
 	int nb_deaths_natural <- 0;
 	int nb_deaths_total -> nb_deaths_predation + nb_deaths_natural;
+	int nb_predated_black <- 0;
+	int nb_predated_white <- 0;
+	int nb_predated_gray <- 0;
+
+	// --- Monitoring: cumulative counters over entire simulation ---
+	int total_reproductions <- 0;
+	int total_deaths_predation <- 0;
+	int total_deaths_natural <- 0;
+	int total_deaths_total -> total_deaths_predation + total_deaths_natural;
+	int total_predated_black <- 0;
+	int total_predated_white <- 0;
+	int total_predated_gray <- 0;
 
 	reflex reset_counters {
 		nb_reproductions <- 0;
 		nb_deaths_predation <- 0;
 		nb_deaths_natural <- 0;
+		nb_predated_black <- 0;
+		nb_predated_white <- 0;
+		nb_predated_gray <- 0;
 	}
 
 	init {
@@ -123,11 +138,13 @@ species butterfly skills: [moving] {
 				location <- myself.location;
 			}
 			nb_reproductions <- nb_reproductions + 1;
+			total_reproductions <- total_reproductions + 1;
 		}
 	}
 
 	reflex die_natural when: flip(natural_death_proba) {
 		nb_deaths_natural <- nb_deaths_natural + 1;
+		total_deaths_natural <- total_deaths_natural + 1;
 		do die;
 	}
 
@@ -161,6 +178,18 @@ species predator skills: [moving] {
 			}
 			if flip(capture_p) {
 				nb_deaths_predation <- nb_deaths_predation + 1;
+				total_deaths_predation <- total_deaths_predation + 1;
+				if prey.color_class = "black" {
+					nb_predated_black <- nb_predated_black + 1;
+					total_predated_black <- total_predated_black + 1;
+				} else if prey.color_class = "white" {
+					nb_predated_white <- nb_predated_white + 1;
+					total_predated_white <- total_predated_white + 1;
+				} else {
+					nb_predated_gray <- nb_predated_gray + 1;
+					total_predated_gray <- total_predated_gray + 1;
+				}
+				location <- prey.location;
 				ask prey {
 					do die;
 				}
@@ -189,7 +218,10 @@ species predator skills: [moving] {
 experiment Base_Model type: gui {
 	reflex export_csv {
 		save [cycle, length(butterfly), nb_reproductions, nb_deaths_predation, nb_deaths_natural, nb_deaths_total,
-			nb_black, nb_white, nb_gray, nb_BB, nb_WW, nb_BW, nb_allele_B, nb_allele_W]
+			nb_black, nb_white, nb_gray, nb_BB, nb_WW, nb_BW, nb_allele_B, nb_allele_W,
+			total_deaths_predation, total_deaths_natural, total_reproductions,
+			nb_predated_black, nb_predated_white, nb_predated_gray,
+			total_predated_black, total_predated_white, total_predated_gray]
 			to: "../Analysis/Base_Model_results.csv"
 			format: "csv"
 			rewrite: (cycle = 0)
@@ -205,13 +237,18 @@ experiment Base_Model type: gui {
 	parameter "Initial predators" var: nb_predators_init;
 	parameter "Base capture probability" var: base_capture_proba;
 	parameter "Predator detection radius" var: detection_radius;
+	parameter "Predator speed" var: predator_speed;
 
 	output {
 		monitor "Butterflies alive" value: length(butterfly);
-		monitor "Reproductions (this cycle)" value: nb_reproductions;
+		monitor "Total killed by predators" value: total_deaths_predation;
+		monitor "Black killed by predators" value: total_predated_black;
+		monitor "White killed by predators" value: total_predated_white;
+		monitor "Gray killed by predators" value: total_predated_gray;
 		monitor "Deaths - predation (this cycle)" value: nb_deaths_predation;
 		monitor "Deaths - natural (this cycle)" value: nb_deaths_natural;
 		monitor "Deaths - total (this cycle)" value: nb_deaths_total;
+		monitor "Reproductions (this cycle)" value: nb_reproductions;
 		monitor "Genotype BB (black)" value: nb_BB;
 		monitor "Genotype WW (white)" value: nb_WW;
 		monitor "Genotype BW (gray)" value: nb_BW;
@@ -228,7 +265,20 @@ experiment Base_Model type: gui {
 			chart "Color morphs over time" type: series {
 				data "black" value: nb_black color: #black;
 				data "gray" value: nb_gray color: #gray;
-				data "white" value: nb_white color: #black marker: false;
+				data "white" value: nb_white color: #blue;
+			}
+		}
+		display Predation_Chart {
+			chart "Cumulative predator kills by morph" type: series {
+				data "black killed" value: total_predated_black color: #black;
+				data "gray killed" value: total_predated_gray color: #gray;
+				data "white killed" value: total_predated_white color: #blue;
+			}
+		}
+		display Mortality_Chart {
+			chart "Cumulative deaths: Predation vs Natural" type: series {
+				data "killed by predators" value: total_deaths_predation color: #red;
+				data "natural deaths" value: total_deaths_natural color: #gray;
 			}
 		}
 		display Events_Chart {
@@ -243,19 +293,67 @@ experiment Base_Model type: gui {
 
 experiment Extension1_FrequencyDependentPredation parent: Base_Model {
 	parameter "Frequency-dependent predation" var: frequency_dependent_predation init: true;
+
+	reflex export_csv {
+		save [cycle, length(butterfly), nb_reproductions, nb_deaths_predation, nb_deaths_natural, nb_deaths_total,
+			nb_black, nb_white, nb_gray, nb_BB, nb_WW, nb_BW, nb_allele_B, nb_allele_W,
+			total_deaths_predation, total_deaths_natural, total_reproductions,
+			nb_predated_black, nb_predated_white, nb_predated_gray,
+			total_predated_black, total_predated_white, total_predated_gray]
+			to: "../Analysis/Extension1_FrequencyDependentPredation_results.csv"
+			format: "csv"
+			rewrite: (cycle = 0)
+			header: true;
+	}
 }
 
 experiment Extension2_DynamicEnvironment parent: Base_Model {
 	parameter "Dynamic environment" var: dynamic_environment init: true;
 	parameter "Environment change speed" var: env_change_speed init: 0.1;
+
+	reflex export_csv {
+		save [cycle, length(butterfly), nb_reproductions, nb_deaths_predation, nb_deaths_natural, nb_deaths_total,
+			nb_black, nb_white, nb_gray, nb_BB, nb_WW, nb_BW, nb_allele_B, nb_allele_W,
+			total_deaths_predation, total_deaths_natural, total_reproductions,
+			nb_predated_black, nb_predated_white, nb_predated_gray,
+			total_predated_black, total_predated_white, total_predated_gray]
+			to: "../Analysis/Extension2_DynamicEnvironment_results.csv"
+			format: "csv"
+			rewrite: (cycle = 0)
+			header: true;
+	}
 }
 
 experiment Extension3_HighPredation parent: Base_Model {
 	parameter "Base capture probability" var: base_capture_proba init: 0.9;
+
+	reflex export_csv {
+		save [cycle, length(butterfly), nb_reproductions, nb_deaths_predation, nb_deaths_natural, nb_deaths_total,
+			nb_black, nb_white, nb_gray, nb_BB, nb_WW, nb_BW, nb_allele_B, nb_allele_W,
+			total_deaths_predation, total_deaths_natural, total_reproductions,
+			nb_predated_black, nb_predated_white, nb_predated_gray,
+			total_predated_black, total_predated_white, total_predated_gray]
+			to: "../Analysis/Extension3_HighPredation_results.csv"
+			format: "csv"
+			rewrite: (cycle = 0)
+			header: true;
+	}
 }
 
 experiment Extension3_LowPredation parent: Base_Model {
 	parameter "Base capture probability" var: base_capture_proba init: 0.15;
+
+	reflex export_csv {
+		save [cycle, length(butterfly), nb_reproductions, nb_deaths_predation, nb_deaths_natural, nb_deaths_total,
+			nb_black, nb_white, nb_gray, nb_BB, nb_WW, nb_BW, nb_allele_B, nb_allele_W,
+			total_deaths_predation, total_deaths_natural, total_reproductions,
+			nb_predated_black, nb_predated_white, nb_predated_gray,
+			total_predated_black, total_predated_white, total_predated_gray]
+			to: "../Analysis/Extension3_LowPredation_results.csv"
+			format: "csv"
+			rewrite: (cycle = 0)
+			header: true;
+	}
 }
 
 experiment View_3D parent: Base_Model {
