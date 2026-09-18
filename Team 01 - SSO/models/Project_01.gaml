@@ -60,6 +60,14 @@ global {
 	int nb_predated_white <- 0;
 	int nb_predated_gray <- 0;
 
+	// --- Monitoring: kills split by color class and local environment color at kill location (extension 2) ---
+	int nb_predated_black_in_black_env <- 0;
+	int nb_predated_white_in_black_env <- 0;
+	int nb_predated_gray_in_black_env <- 0;
+	int nb_predated_black_in_white_env <- 0;
+	int nb_predated_white_in_white_env <- 0;
+	int nb_predated_gray_in_white_env <- 0;
+
 	// --- Monitoring: cumulative counters over entire simulation ---
 	int total_reproductions <- 0;
 	int total_deaths_predation <- 0;
@@ -68,6 +76,12 @@ global {
 	int total_predated_black <- 0;
 	int total_predated_white <- 0;
 	int total_predated_gray <- 0;
+	int total_predated_black_in_black_env <- 0;
+	int total_predated_white_in_black_env <- 0;
+	int total_predated_gray_in_black_env <- 0;
+	int total_predated_black_in_white_env <- 0;
+	int total_predated_white_in_white_env <- 0;
+	int total_predated_gray_in_white_env <- 0;
 
 	reflex reset_counters {
 		nb_reproductions <- 0;
@@ -76,6 +90,12 @@ global {
 		nb_predated_black <- 0;
 		nb_predated_white <- 0;
 		nb_predated_gray <- 0;
+		nb_predated_black_in_black_env <- 0;
+		nb_predated_white_in_black_env <- 0;
+		nb_predated_gray_in_black_env <- 0;
+		nb_predated_black_in_white_env <- 0;
+		nb_predated_white_in_white_env <- 0;
+		nb_predated_gray_in_white_env <- 0;
 	}
 
 	init {
@@ -169,12 +189,12 @@ species predator skills: [moving] {
 		list<butterfly> preys <- butterfly at_distance detection_radius;
 		if not empty(preys) {
 			butterfly prey <- one_of(preys);
+			patch_env here_patch <- patch_env(prey.location);
 			float capture_p;
 			if frequency_dependent_predation {
 				float freq <- length(butterfly where (each.color_class = prey.color_class)) / max(1, length(butterfly));
 				capture_p <- base_capture_proba * freq;
 			} else {
-				patch_env here_patch <- patch_env(prey.location);
 				float contrast <- abs(here_patch.env_color - prey.color_value);
 				capture_p <- base_capture_proba * contrast;
 			}
@@ -190,6 +210,32 @@ species predator skills: [moving] {
 				} else {
 					nb_predated_gray <- nb_predated_gray + 1;
 					total_predated_gray <- total_predated_gray + 1;
+				}
+				bool killed_in_black_env <- here_patch.env_color < 0.5;
+				if prey.color_class = "black" {
+					if killed_in_black_env {
+						nb_predated_black_in_black_env <- nb_predated_black_in_black_env + 1;
+						total_predated_black_in_black_env <- total_predated_black_in_black_env + 1;
+					} else {
+						nb_predated_black_in_white_env <- nb_predated_black_in_white_env + 1;
+						total_predated_black_in_white_env <- total_predated_black_in_white_env + 1;
+					}
+				} else if prey.color_class = "white" {
+					if killed_in_black_env {
+						nb_predated_white_in_black_env <- nb_predated_white_in_black_env + 1;
+						total_predated_white_in_black_env <- total_predated_white_in_black_env + 1;
+					} else {
+						nb_predated_white_in_white_env <- nb_predated_white_in_white_env + 1;
+						total_predated_white_in_white_env <- total_predated_white_in_white_env + 1;
+					}
+				} else {
+					if killed_in_black_env {
+						nb_predated_gray_in_black_env <- nb_predated_gray_in_black_env + 1;
+						total_predated_gray_in_black_env <- total_predated_gray_in_black_env + 1;
+					} else {
+						nb_predated_gray_in_white_env <- nb_predated_gray_in_white_env + 1;
+						total_predated_gray_in_white_env <- total_predated_gray_in_white_env + 1;
+					}
 				}
 				location <- prey.location;
 				ask prey {
@@ -283,13 +329,13 @@ experiment Base_Model type: gui {
 				data "natural deaths" value: total_deaths_natural color: #gray;
 			}
 		}
-		display Events_Chart {
-			chart "Reproductions vs deaths per cycle" type: series {
-				data "reproductions" value: nb_reproductions color: #green;
-				data "deaths (predation)" value: nb_deaths_predation color: #red;
-				data "deaths (natural)" value: nb_deaths_natural color: #gray;
-			}
-		}
+//		display Events_Chart {
+//			chart "Reproductions vs deaths per cycle" type: series {
+//				data "reproductions" value: nb_reproductions color: #green;
+//				data "deaths (predation)" value: nb_deaths_predation color: #red;
+//				data "deaths (natural)" value: nb_deaths_natural color: #gray;
+//			}
+//		}
 	}
 }
 
@@ -318,11 +364,43 @@ experiment Extension2_DynamicEnvironment parent: Base_Model {
 			nb_black, nb_white, nb_gray, nb_BB, nb_WW, nb_BW, nb_allele_B, nb_allele_W,
 			total_deaths_predation, total_deaths_natural, total_reproductions,
 			nb_predated_black, nb_predated_white, nb_predated_gray,
-			total_predated_black, total_predated_white, total_predated_gray]
+			total_predated_black, total_predated_white, total_predated_gray,
+			total_predated_black_in_black_env, total_predated_white_in_black_env, total_predated_gray_in_black_env,
+			total_predated_black_in_white_env, total_predated_white_in_white_env, total_predated_gray_in_white_env]
 			to: "../Analysis/Extension2_DynamicEnvironment_results.csv"
 			format: "csv"
 			rewrite: (cycle = 0)
 			header: true;
+	}
+
+	output {
+		display Environment type: 2d {
+			image "../assets/background.jpg";
+			grid patch_env border: #black transparency: 0.3;
+			species butterfly aspect: base;
+			species predator aspect: base;
+		}
+		display Population_Chart {
+			chart "Color morphs over time" type: series {
+				data "black" value: nb_black color: #black;
+				data "gray" value: nb_gray color: #gray;
+				data "white" value: nb_white color: #blue;
+			}
+		}
+		display Black_Env_Kills_Chart {
+			chart "Cumulative kills in black-bg patches, by morph" type: series {
+				data "black killed" value: total_predated_black_in_black_env color: #black;
+				data "gray killed" value: total_predated_gray_in_black_env color: #gray;
+				data "white killed" value: total_predated_white_in_black_env color: #blue;
+			}
+		}
+		display White_Env_Kills_Chart {
+			chart "Cumulative kills in white-bg patches, by morph" type: series {
+				data "black killed" value: total_predated_black_in_white_env color: #black;
+				data "gray killed" value: total_predated_gray_in_white_env color: #gray;
+				data "white killed" value: total_predated_white_in_white_env color: #blue;
+			}
+		}
 	}
 }
 
